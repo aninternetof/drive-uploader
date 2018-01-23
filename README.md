@@ -14,5 +14,13 @@ $> pip3 install -r requirements.txt
 
 Then, run the app:
 ```bash
-$> python3 watcher.py /path/to/the/local/dir/to/watch /dest/path/on/google/drive
+$> python3 watcher.py -l /path/to/local/dir/to/watch -r DirectoryOnGoogleDrive
+
 ```
+
+## Limitations
+
+* Only supports saving to a directory at the root of your Google drive (name supplied by the 
+`-r` option). If that directory doesn't exist it will be created.
+* No true syncing of the directory contents. If watcher.py is not running when the file is created,
+the file will never be uploaded.

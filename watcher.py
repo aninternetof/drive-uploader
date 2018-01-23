@@ -1,4 +1,5 @@
 import time
+import argparse
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 from watchdog.observers import Observer
@@ -8,17 +9,18 @@ gauth = GoogleAuth()
 gauth.LocalWebserverAuth()
 drive = GoogleDrive(gauth)
 
+REMOTE_DIR = 'uploaded-from-drive-uploader'
 
 # credit: https://www.michaelcho.me/article/using-pythons-watchdog-to-monitor-changes-to-a-directory
 class Watcher:
-    DIRECTORY_TO_WATCH = "/home/bradyhurlburt/Desktop"
 
-    def __init__(self):
+    def __init__(self, local_dir):
         self.observer = Observer()
+        self.local_dir = local_dir
 
     def run(self):
         event_handler = Handler()
-        self.observer.schedule(event_handler, self.DIRECTORY_TO_WATCH, recursive=False)
+        self.observer.schedule(event_handler, self.local_dir, recursive=False)
         self.observer.start()
         try:
             while True:
@@ -42,11 +44,11 @@ class Handler(FileSystemEventHandler):
             print("Received created event - %s." % event.src_path)
             with open(event.src_path, 'r') as local_fh:
                 file_list = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
-                file_list = [f for f in file_list if f['title'] == 'PasteurFolder']
+                file_list = [f for f in file_list if f['title'] == REMOTE_DIR]
                 if file_list:
                     dir_id = file_list[0]['id']
                 else:
-                    folder_metadata = {'title': 'PasteurFolder', 'mimeType': 'application/vnd.google-apps.folder'}
+                    folder_metadata = {'title': REMOTE_DIR, 'mimeType': 'application/vnd.google-apps.folder'}
                     folder = drive.CreateFile(folder_metadata)
                     folder.Upload()
                     dir_id = folder['id']
@@ -60,5 +62,10 @@ class Handler(FileSystemEventHandler):
 
 
 if __name__ == '__main__':
-    w = Watcher()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-l', '--local_dir', help='Path to the local directory to watch')
+    parser.add_argument('-r', '--remote_dir', help='Destination directory on the remote (Google Drive)')
+    args = parser.parse_args()
+    REMOTE_DIR = args.remote_dir
+    w = Watcher(args.local_dir)
     w.run()
