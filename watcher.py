@@ -41,9 +41,21 @@ class Handler(FileSystemEventHandler):
             # Take any action here when a file is first created.
             print("Received created event - %s." % event.src_path)
             with open(event.src_path, 'r') as local_fh:
-                # print('its contents are: {}'.format(local_fh.read()))
-                drive_fh = drive.CreateFile({'title': event.src_path.split('/')[-1]})  # Create GoogleDriveFile instance with title 'Hello.txt'.
-                drive_fh.SetContentString(local_fh.read())  # Set content of the file from given string.
+                file_list = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
+                file_list = [f for f in file_list if f['title'] == 'PasteurFolder']
+                if file_list:
+                    dir_id = file_list[0]['id']
+                else:
+                    folder_metadata = {'title': 'PasteurFolder', 'mimeType': 'application/vnd.google-apps.folder'}
+                    folder = drive.CreateFile(folder_metadata)
+                    folder.Upload()
+                    dir_id = folder['id']
+
+                drive_fh = drive.CreateFile({
+                    'title': event.src_path.split('/')[-1],
+                    'parents': [{'kind': 'drive#fileLink', 'id': dir_id}]
+                })
+                drive_fh.SetContentFile(event.src_path)  # Set content of the file from given string.
                 drive_fh.Upload()
 
 
