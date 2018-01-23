@@ -4,7 +4,7 @@ A simple Python script to monitor a directory and upload any new files to your G
 
 ## Usage
 
-Follow the steps 1 through 5 in the [PyCharm Quickstart](https://pythonhosted.org/PyDrive/quickstart.html) to create 
+Follow the steps 1 through 5 in the [PyDrive Quickstart](https://pythonhosted.org/PyDrive/quickstart.html) to create 
 Google Drive secrets. Save them as `client_secrets.json` in the same directory as this README.md.
 
 Then, install the requirements for this app:
