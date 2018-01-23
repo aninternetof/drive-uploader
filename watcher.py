@@ -41,24 +41,23 @@ class Handler(FileSystemEventHandler):
 
         elif event.event_type == 'created':
             # Take any action here when a file is first created.
-            print("Received created event - %s." % event.src_path)
-            with open(event.src_path, 'r') as local_fh:
-                file_list = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
-                file_list = [f for f in file_list if f['title'] == REMOTE_DIR]
-                if file_list:
-                    dir_id = file_list[0]['id']
-                else:
-                    folder_metadata = {'title': REMOTE_DIR, 'mimeType': 'application/vnd.google-apps.folder'}
-                    folder = drive.CreateFile(folder_metadata)
-                    folder.Upload()
-                    dir_id = folder['id']
+            print("Received created event - {}.".format(event.src_path))
+            file_list = drive.ListFile({'q': "'root' in parents and trashed=false"}).GetList()
+            file_list = [f for f in file_list if f['title'] == REMOTE_DIR]
+            if file_list:
+                dir_id = file_list[0]['id']
+            else:
+                folder_metadata = {'title': REMOTE_DIR, 'mimeType': 'application/vnd.google-apps.folder'}
+                folder = drive.CreateFile(folder_metadata)
+                folder.Upload()
+                dir_id = folder['id']
 
-                drive_fh = drive.CreateFile({
-                    'title': event.src_path.split('/')[-1],
-                    'parents': [{'kind': 'drive#fileLink', 'id': dir_id}]
-                })
-                drive_fh.SetContentFile(event.src_path)  # Set content of the file from given string.
-                drive_fh.Upload()
+            drive_fh = drive.CreateFile({
+                'title': event.src_path.split('/')[-1],
+                'parents': [{'kind': 'drive#fileLink', 'id': dir_id}]
+            })
+            drive_fh.SetContentFile(event.src_path)  # Set content of the file from given string.
+            drive_fh.Upload()
 
 
 if __name__ == '__main__':
